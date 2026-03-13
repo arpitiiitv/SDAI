@@ -6,13 +6,16 @@
 (function () {
   'use strict';
 
-  // API base: in development the backend runs on port 3000; in production (same origin) use ''
+  // API base: production uses Render, development uses localhost:3000
   var API_BASE = (function () {
     var loc = window.location;
-    // Same origin as backend (production or single-server setup)
-    if (loc.port === '3000' || loc.port === '') return '';
-    // Development: backend is always on localhost:3000
-    return 'http://localhost:3000';
+    // Local development: backend on port 3000
+    if (loc.hostname === 'localhost' || loc.hostname === '127.0.0.1') {
+      if (loc.port === '3000') return '';
+      return 'http://localhost:3000';
+    }
+    // Production: Render backend
+    return 'https://sdai-m9tc.onrender.com';
   })();
 
   // ——— Mobile nav toggle ———
