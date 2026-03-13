@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Verify your SDAI certificate. Enter your Certificate ID to check authenticity.">
+  <title>Verify Certificate | School of Data and AI</title>
+  <link rel="icon" href="favicon.png" type="image/png" sizes="any">
+<link rel="shortcut icon" href="favicon.png" type="image/png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <header class="site-header">
+    <div class="container">
+      <a href="index.html" class="logo">
+        <img src="images/sdai_logo_v1.png" alt="School of Data and AI - SDAI" class="logo-img">
+      </a>
+      <button type="button" class="nav-toggle" aria-label="Open menu" aria-expanded="false" data-nav-toggle>
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/></svg>
+      </button>
+      <nav class="nav-menu" id="nav-menu" aria-label="Main">
+        <a href="index.html">Home</a>
+        <a href="courses.html">Courses</a>
+        <a href="about.html">About</a>
+        <a href="contact.html">Contact</a>
+        <a href="certificate.html">Verify Certificate</a>
+        <a href="contact.html#masterclass" class="btn btn-cta header-cta nav-cta">Free Masterclass</a>
+      </nav>
+      <a href="contact.html#masterclass" class="btn btn-cta header-cta">Free Masterclass</a>
+    </div>
+  </header>
+
+  <main>
+    <section class="page-header">
+      <div class="container">
+        <h1>Verify Your Certificate</h1>
+        <p>Confirm authenticity of your SDAI certificate.</p>
+      </div>
+    </section>
+
+    <section class="verify-section">
+      <div class="container">
+        <h2>Verify Your Certificate</h2>
+        <p>Enter your SDAI Certificate ID to verify authenticity.</p>
+        <form class="verify-form" id="verify-form">
+          <div class="form-group">
+            <label for="certificate-id">Certificate ID</label>
+            <input type="text" id="certificate-id" name="certificateId" placeholder="e.g. SDAI-2024-001234" required>
+          </div>
+          <button type="submit" class="btn btn-primary">Verify</button>
+        </form>
+        <div id="verify-result" class="verify-result" aria-live="polite" style="margin-top: 1.5rem; font-size: 1rem;"></div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="container">
+      <p class="footer-tagline">School of Data and AI — Learn Data. Master AI. Lead the World.</p>
+      <p><a href="contact.html">Contact</a> · <a href="https://www.instagram.com/schoolofdataandai/" target="_blank" rel="noopener">Instagram</a> · <a href="certificate.html">Verify Certificate</a></p>
+    </div>
+  </footer>
+
+  <script src="js/main.js"></script>
+</body>
+</html>

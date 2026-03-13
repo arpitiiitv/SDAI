@@ -1,0 +1,485 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin — SDAI</title>
+  <link rel="icon" href="/favicon.png" type="image/png">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --primary: #0c1929;
+      --primary-soft: #132f4c;
+      --accent: #0d9488;
+      --accent-hover: #0f766e;
+      --cta: #ea580c;
+      --white: #ffffff;
+      --gray-50: #f8fafc;
+      --gray-100: #f1f5f9;
+      --gray-200: #e2e8f0;
+      --gray-300: #cbd5e1;
+      --gray-500: #64748b;
+      --gray-600: #475569;
+      --gray-800: #1e293b;
+      --text: #1e293b;
+      --text-muted: #64748b;
+      --red: #dc2626;
+      --green: #16a34a;
+      --font: "Plus Jakarta Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+    *, *::before, *::after { box-sizing: border-box; }
+    body { margin: 0; font-family: var(--font); background: var(--gray-50); color: var(--text); font-size: 0.9375rem; line-height: 1.5; }
+
+    /* Login */
+    .login-wrap { display: flex; align-items: center; justify-content: center; min-height: 100vh; padding: 1rem; }
+    .login-card { background: var(--white); border: 1px solid var(--gray-200); border-radius: 0.75rem; padding: 2.5rem; max-width: 22rem; width: 100%; box-shadow: 0 4px 24px rgba(12,25,41,0.06); text-align: center; }
+    .login-card h1 { font-size: 1.25rem; margin: 0 0 0.25rem; color: var(--primary); }
+    .login-card p { color: var(--text-muted); font-size: 0.875rem; margin: 0 0 1.5rem; }
+    .login-card input { width: 100%; padding: 0.75rem 1rem; font-family: inherit; font-size: 0.9375rem; border: 1px solid var(--gray-200); border-radius: 0.5rem; margin-bottom: 1rem; }
+    .login-card input:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px rgba(13,148,136,0.12); }
+    .login-card button { width: 100%; padding: 0.75rem; font-family: inherit; font-size: 0.9375rem; font-weight: 600; background: var(--accent); color: var(--white); border: none; border-radius: 0.5rem; cursor: pointer; }
+    .login-card button:hover { background: var(--accent-hover); }
+    .login-error { color: var(--red); font-size: 0.8125rem; margin-top: 0.5rem; display: none; }
+
+    /* Shell */
+    .shell { display: none; }
+    .topbar { background: var(--primary); color: var(--white); padding: 0.75rem 1.5rem; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 10; }
+    .topbar h1 { font-size: 1rem; font-weight: 600; margin: 0; }
+    .topbar-right { display: flex; gap: 0.75rem; align-items: center; }
+    .topbar button { background: rgba(255,255,255,0.1); color: var(--white); border: 1px solid rgba(255,255,255,0.15); padding: 0.4rem 0.75rem; border-radius: 0.375rem; cursor: pointer; font-family: inherit; font-size: 0.8125rem; font-weight: 500; }
+    .topbar button:hover { background: rgba(255,255,255,0.18); }
+
+    .main { max-width: 72rem; margin: 0 auto; padding: 1.5rem; }
+
+    /* Stats */
+    .stats-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 1rem; margin-bottom: 1.5rem; }
+    .stat-card { background: var(--white); border: 1px solid var(--gray-200); border-radius: 0.75rem; padding: 1.25rem; text-align: center; }
+    .stat-num { font-size: 1.75rem; font-weight: 700; color: var(--primary); line-height: 1.1; }
+    .stat-label { font-size: 0.75rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; color: var(--text-muted); margin-top: 0.25rem; }
+
+    /* Tabs */
+    .tabs { display: flex; gap: 0.25rem; margin-bottom: 1.25rem; border-bottom: 2px solid var(--gray-200); }
+    .tab-btn { background: none; border: none; padding: 0.6rem 1.25rem; font-family: inherit; font-size: 0.875rem; font-weight: 600; color: var(--text-muted); cursor: pointer; border-bottom: 2px solid transparent; margin-bottom: -2px; transition: color 0.15s, border-color 0.15s; }
+    .tab-btn:hover { color: var(--primary); }
+    .tab-btn.active { color: var(--accent); border-bottom-color: var(--accent); }
+    .tab-panel { display: none; }
+    .tab-panel.active { display: block; }
+
+    /* Toolbar */
+    .toolbar { display: flex; flex-wrap: wrap; gap: 0.75rem; align-items: center; margin-bottom: 1rem; }
+    .toolbar select, .toolbar input { padding: 0.5rem 0.75rem; font-family: inherit; font-size: 0.8125rem; border: 1px solid var(--gray-200); border-radius: 0.375rem; background: var(--white); }
+    .toolbar select:focus, .toolbar input:focus { outline: none; border-color: var(--accent); }
+    .btn-sm { padding: 0.5rem 0.9rem; font-family: inherit; font-size: 0.8125rem; font-weight: 600; border: none; border-radius: 0.375rem; cursor: pointer; }
+    .btn-accent { background: var(--accent); color: var(--white); }
+    .btn-accent:hover { background: var(--accent-hover); }
+    .btn-outline-sm { background: var(--white); color: var(--gray-600); border: 1px solid var(--gray-200); }
+    .btn-outline-sm:hover { background: var(--gray-50); }
+    .btn-danger { background: var(--white); color: var(--red); border: 1px solid var(--gray-200); }
+    .btn-danger:hover { background: #fef2f2; }
+
+    /* Table */
+    .table-wrap { overflow-x: auto; background: var(--white); border: 1px solid var(--gray-200); border-radius: 0.75rem; }
+    table { width: 100%; border-collapse: collapse; font-size: 0.8125rem; }
+    th { background: var(--gray-50); text-align: left; padding: 0.65rem 0.75rem; font-weight: 600; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.04em; color: var(--text-muted); border-bottom: 1px solid var(--gray-200); white-space: nowrap; }
+    td { padding: 0.65rem 0.75rem; border-bottom: 1px solid var(--gray-100); vertical-align: top; }
+    tr:last-child td { border-bottom: none; }
+    tr:hover td { background: var(--gray-50); }
+    .empty-msg { padding: 2rem; text-align: center; color: var(--text-muted); font-size: 0.875rem; }
+
+    /* Add cert form */
+    .add-form { background: var(--white); border: 1px solid var(--gray-200); border-radius: 0.75rem; padding: 1.25rem; margin-bottom: 1rem; display: none; }
+    .add-form.open { display: block; }
+    .add-form h3 { margin: 0 0 1rem; font-size: 0.9375rem; }
+    .form-row { display: flex; flex-wrap: wrap; gap: 0.75rem; align-items: end; }
+    .form-field { flex: 1; min-width: 140px; }
+    .form-field label { display: block; font-size: 0.75rem; font-weight: 600; color: var(--text-muted); margin-bottom: 0.25rem; }
+    .form-field input { width: 100%; padding: 0.5rem 0.75rem; font-family: inherit; font-size: 0.8125rem; border: 1px solid var(--gray-200); border-radius: 0.375rem; }
+    .form-field input:focus { outline: none; border-color: var(--accent); }
+
+    /* Toast */
+    .toast { position: fixed; bottom: 1.5rem; right: 1.5rem; background: var(--primary); color: var(--white); padding: 0.75rem 1.25rem; border-radius: 0.5rem; font-size: 0.8125rem; font-weight: 500; box-shadow: 0 8px 24px rgba(12,25,41,0.15); opacity: 0; transform: translateY(10px); transition: opacity 0.25s, transform 0.25s; z-index: 999; }
+    .toast.show { opacity: 1; transform: translateY(0); }
+
+    @media (max-width: 640px) {
+      .main { padding: 1rem; }
+      .stats-row { grid-template-columns: repeat(2, 1fr); }
+    }
+  </style>
+</head>
+<body>
+
+<!-- Login screen -->
+<div class="login-wrap" id="login-screen">
+  <div class="login-card">
+    <h1>SDAI Admin</h1>
+    <p>Enter your admin password to continue.</p>
+    <form id="login-form">
+      <input type="password" id="login-password" placeholder="Admin password" autocomplete="current-password" required>
+      <button type="submit">Sign In</button>
+      <p class="login-error" id="login-error">Incorrect password.</p>
+    </form>
+  </div>
+</div>
+
+<!-- Admin shell -->
+<div class="shell" id="admin-shell">
+  <div class="topbar">
+    <h1>SDAI Admin</h1>
+    <div class="topbar-right">
+      <span id="topbar-count" style="font-size:0.8125rem;opacity:0.7"></span>
+      <button id="btn-refresh" title="Refresh">Refresh</button>
+      <button id="btn-logout" title="Sign out">Sign Out</button>
+    </div>
+  </div>
+
+  <div class="main">
+    <!-- Stats -->
+    <div class="stats-row" id="stats-row"></div>
+
+    <!-- Tabs -->
+    <div class="tabs">
+      <button class="tab-btn active" data-tab="submissions">Submissions</button>
+      <button class="tab-btn" data-tab="certificates">Certificates</button>
+    </div>
+
+    <!-- Submissions tab -->
+    <div class="tab-panel active" id="panel-submissions">
+      <div class="toolbar">
+        <select id="filter-type">
+          <option value="">All types</option>
+          <option value="masterclass">Masterclass</option>
+          <option value="enrollment">Enrollment</option>
+          <option value="enquiry">Enquiry</option>
+        </select>
+        <button class="btn-sm btn-outline-sm" id="btn-export-sub">Export CSV</button>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr><th>#</th><th>Name</th><th>Phone</th><th>Email</th><th>Message</th><th>Type</th><th>Course</th><th>Date</th><th></th></tr>
+          </thead>
+          <tbody id="sub-tbody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Certificates tab -->
+    <div class="tab-panel" id="panel-certificates">
+      <div class="toolbar">
+        <button class="btn-sm btn-accent" id="btn-toggle-add-cert">+ Add Certificate</button>
+        <button class="btn-sm btn-outline-sm" id="btn-export-cert">Export CSV</button>
+      </div>
+
+      <div class="add-form" id="add-cert-form">
+        <h3>Add Certificate</h3>
+        <form id="cert-form">
+          <div class="form-row">
+            <div class="form-field">
+              <label>Certificate ID</label>
+              <input type="text" name="certificateId" placeholder="SDAI-2025-003" required>
+            </div>
+            <div class="form-field">
+              <label>Student Name</label>
+              <input type="text" name="studentName" placeholder="Full name" required>
+            </div>
+            <div class="form-field">
+              <label>Course</label>
+              <input type="text" name="course" placeholder="Track 1: AI for Everyone" required>
+            </div>
+            <div class="form-field">
+              <label>Issued Date</label>
+              <input type="date" name="issuedAt">
+            </div>
+            <div class="form-field" style="flex:0 0 auto;">
+              <label>&nbsp;</label>
+              <button type="submit" class="btn-sm btn-accent">Add</button>
+            </div>
+          </div>
+        </form>
+      </div>
+
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr><th>#</th><th>Certificate ID</th><th>Student Name</th><th>Course</th><th>Issued</th><th>Added</th><th></th></tr>
+          </thead>
+          <tbody id="cert-tbody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+(function () {
+  'use strict';
+
+  var API = window.location.origin;
+  var token = '';
+
+  // DOM
+  var loginScreen = document.getElementById('login-screen');
+  var adminShell = document.getElementById('admin-shell');
+  var loginForm = document.getElementById('login-form');
+  var loginError = document.getElementById('login-error');
+  var loginPw = document.getElementById('login-password');
+
+  // Helpers
+  function headers() { return { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token }; }
+
+  function toast(msg) {
+    var el = document.getElementById('toast');
+    el.textContent = msg;
+    el.classList.add('show');
+    setTimeout(function () { el.classList.remove('show'); }, 2500);
+  }
+
+  function esc(s) { var d = document.createElement('div'); d.textContent = s || ''; return d.innerHTML; }
+
+  function fmtDate(d) {
+    if (!d) return '—';
+    // SQLite returns "2026-03-13 16:41:33" — replace space with T and add Z for valid ISO
+    var iso = d.trim().replace(' ', 'T');
+    if (iso.indexOf('Z') === -1 && iso.indexOf('+') === -1) iso += 'Z';
+    var dt = new Date(iso);
+    if (isNaN(dt.getTime())) return d;
+    return dt.toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' });
+  }
+
+  // Login
+  loginForm.addEventListener('submit', function (e) {
+    e.preventDefault();
+    token = loginPw.value.trim();
+    if (!token) return;
+    fetch(API + '/api/admin/stats', { headers: headers() })
+      .then(function (r) {
+        if (!r.ok) throw new Error('bad');
+        return r.json();
+      })
+      .then(function () {
+        loginError.style.display = 'none';
+        loginScreen.style.display = 'none';
+        adminShell.style.display = 'block';
+        sessionStorage.setItem('sdai_admin_token', token);
+        loadAll();
+        startAutoRefresh();
+      })
+      .catch(function () {
+        loginError.style.display = 'block';
+        token = '';
+      });
+  });
+
+  // Auto-login from session
+  var saved = sessionStorage.getItem('sdai_admin_token');
+  if (saved) {
+    token = saved;
+    fetch(API + '/api/admin/stats', { headers: headers() })
+      .then(function (r) { if (!r.ok) throw new Error('bad'); return r.json(); })
+      .then(function () {
+        loginScreen.style.display = 'none';
+        adminShell.style.display = 'block';
+        loadAll();
+        startAutoRefresh();
+      })
+      .catch(function () { sessionStorage.removeItem('sdai_admin_token'); token = ''; });
+  }
+
+  // Logout
+  document.getElementById('btn-logout').addEventListener('click', function () {
+    sessionStorage.removeItem('sdai_admin_token');
+    token = '';
+    stopAutoRefresh();
+    adminShell.style.display = 'none';
+    loginScreen.style.display = 'flex';
+    loginPw.value = '';
+  });
+
+  // Tabs
+  document.querySelectorAll('.tab-btn').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      document.querySelectorAll('.tab-btn').forEach(function (b) { b.classList.remove('active'); });
+      document.querySelectorAll('.tab-panel').forEach(function (p) { p.classList.remove('active'); });
+      btn.classList.add('active');
+      document.getElementById('panel-' + btn.dataset.tab).classList.add('active');
+    });
+  });
+
+  // Load all
+  function loadAll() { loadStats(); loadSubmissions(); loadCertificates(); }
+  document.getElementById('btn-refresh').addEventListener('click', loadAll);
+
+  // Auto-refresh every 15 seconds
+  var autoRefreshId = null;
+  function startAutoRefresh() { if (!autoRefreshId) autoRefreshId = setInterval(loadAll, 15000); }
+  function stopAutoRefresh() { clearInterval(autoRefreshId); autoRefreshId = null; }
+
+  // Stats
+  function loadStats() {
+    fetch(API + '/api/admin/stats', { headers: headers() })
+      .then(function (r) { return r.json(); })
+      .then(function (d) {
+        var row = document.getElementById('stats-row');
+        row.innerHTML =
+          statCard(d.totalSubmissions, 'Total Leads') +
+          statCard(d.masterclass, 'Masterclass') +
+          statCard(d.enrollment, 'Enrollment') +
+          statCard(d.enquiry, 'Enquiry') +
+          statCard(d.totalCertificates, 'Certificates');
+        document.getElementById('topbar-count').textContent = d.totalSubmissions + ' total leads';
+      });
+  }
+  function statCard(n, label) {
+    return '<div class="stat-card"><div class="stat-num">' + n + '</div><div class="stat-label">' + label + '</div></div>';
+  }
+
+  // Submissions
+  var subsData = [];
+  function loadSubmissions() {
+    var type = document.getElementById('filter-type').value;
+    var url = API + '/api/admin/submissions' + (type ? '?type=' + type : '');
+    fetch(url, { headers: headers() })
+      .then(function (r) { return r.json(); })
+      .then(function (d) {
+        subsData = d.submissions || [];
+        renderSubmissions();
+      });
+  }
+
+  function renderSubmissions() {
+    var tbody = document.getElementById('sub-tbody');
+    if (!subsData.length) {
+      tbody.innerHTML = '<tr><td colspan="9" class="empty-msg">No submissions yet.</td></tr>';
+      return;
+    }
+    tbody.innerHTML = subsData.map(function (s) {
+      return '<tr>' +
+        '<td>' + s.id + '</td>' +
+        '<td><strong>' + esc(s.name) + '</strong></td>' +
+        '<td><a href="tel:' + esc(s.phone) + '">' + esc(s.phone) + '</a></td>' +
+        '<td><a href="mailto:' + esc(s.email) + '">' + esc(s.email) + '</a></td>' +
+        '<td>' + esc(s.message || '') + '</td>' +
+        '<td><span style="text-transform:capitalize">' + esc(s.type) + '</span></td>' +
+        '<td>' + esc(s.course_track || '—') + '</td>' +
+        '<td style="white-space:nowrap">' + fmtDate(s.created_at) + '</td>' +
+        '<td><button class="btn-sm btn-danger" onclick="window.__deleteSub(' + s.id + ')">Delete</button></td>' +
+        '</tr>';
+    }).join('');
+  }
+
+  document.getElementById('filter-type').addEventListener('change', loadSubmissions);
+
+  window.__deleteSub = function (id) {
+    if (!confirm('Delete submission #' + id + '?')) return;
+    fetch(API + '/api/admin/submissions/' + id, { method: 'DELETE', headers: headers() })
+      .then(function (r) { return r.json(); })
+      .then(function () { toast('Submission deleted.'); loadAll(); });
+  };
+
+  // Certificates
+  var certsData = [];
+  function loadCertificates() {
+    fetch(API + '/api/admin/certificates', { headers: headers() })
+      .then(function (r) { return r.json(); })
+      .then(function (d) {
+        certsData = d.certificates || [];
+        renderCertificates();
+      });
+  }
+
+  function renderCertificates() {
+    var tbody = document.getElementById('cert-tbody');
+    if (!certsData.length) {
+      tbody.innerHTML = '<tr><td colspan="7" class="empty-msg">No certificates yet.</td></tr>';
+      return;
+    }
+    tbody.innerHTML = certsData.map(function (c) {
+      return '<tr>' +
+        '<td>' + c.id + '</td>' +
+        '<td><strong>' + esc(c.certificate_id) + '</strong></td>' +
+        '<td>' + esc(c.student_name) + '</td>' +
+        '<td>' + esc(c.course) + '</td>' +
+        '<td style="white-space:nowrap">' + fmtDate(c.issued_at) + '</td>' +
+        '<td style="white-space:nowrap">' + fmtDate(c.created_at) + '</td>' +
+        '<td><button class="btn-sm btn-danger" onclick="window.__deleteCert(' + c.id + ')">Delete</button></td>' +
+        '</tr>';
+    }).join('');
+  }
+
+  window.__deleteCert = function (id) {
+    if (!confirm('Delete certificate #' + id + '?')) return;
+    fetch(API + '/api/admin/certificates/' + id, { method: 'DELETE', headers: headers() })
+      .then(function (r) { return r.json(); })
+      .then(function () { toast('Certificate deleted.'); loadAll(); });
+  };
+
+  // Toggle add cert form
+  document.getElementById('btn-toggle-add-cert').addEventListener('click', function () {
+    document.getElementById('add-cert-form').classList.toggle('open');
+  });
+
+  // Add certificate
+  document.getElementById('cert-form').addEventListener('submit', function (e) {
+    e.preventDefault();
+    var form = e.target;
+    var payload = {
+      certificateId: form.certificateId.value.trim(),
+      studentName: form.studentName.value.trim(),
+      course: form.course.value.trim(),
+      issuedAt: form.issuedAt.value || null
+    };
+    fetch(API + '/api/certificates', { method: 'POST', headers: headers(), body: JSON.stringify(payload) })
+      .then(function (r) { return r.json(); })
+      .then(function (d) {
+        if (d.success) {
+          toast('Certificate added.');
+          form.reset();
+          document.getElementById('add-cert-form').classList.remove('open');
+          loadAll();
+        } else {
+          toast(d.message || 'Failed to add certificate.');
+        }
+      })
+      .catch(function () { toast('Failed to add certificate.'); });
+  });
+
+  // CSV export
+  function toCsv(headers, rows) {
+    var lines = [headers.join(',')];
+    rows.forEach(function (r) {
+      lines.push(headers.map(function (h) {
+        var v = r[h];
+        if (v === null || v === undefined) v = '';
+        return '"' + String(v).replace(/"/g, '""') + '"';
+      }).join(','));
+    });
+    return lines.join('\n');
+  }
+
+  function download(filename, content) {
+    var blob = new Blob([content], { type: 'text/csv' });
+    var a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = filename;
+    a.click();
+  }
+
+  document.getElementById('btn-export-sub').addEventListener('click', function () {
+    if (!subsData.length) return toast('No data to export.');
+    var csv = toCsv(['id', 'name', 'phone', 'email', 'message', 'type', 'course_track', 'created_at'], subsData);
+    download('sdai-submissions.csv', csv);
+    toast('CSV downloaded.');
+  });
+
+  document.getElementById('btn-export-cert').addEventListener('click', function () {
+    if (!certsData.length) return toast('No data to export.');
+    var csv = toCsv(['id', 'certificate_id', 'student_name', 'course', 'issued_at', 'created_at'], certsData);
+    download('sdai-certificates.csv', csv);
+    toast('CSV downloaded.');
+  });
+})();
+</script>
+</body>
+</html>
