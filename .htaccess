@@ -1,0 +1,5 @@
+RewriteEngine On
+
+# Serve all requests from the frontend/ subdirectory
+RewriteCond %{REQUEST_URI} !^/frontend/
+RewriteRule ^(.*)$ /frontend/$1 [L]
