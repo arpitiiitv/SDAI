@@ -1,24 +1,14 @@
 const express = require('express');
 const router = express.Router();
-const nodemailer = require('nodemailer');
 const pool = require('../db');
 
-// Email transporter (configured via env vars)
-const transporter = nodemailer.createTransport({
-  host: process.env.SMTP_HOST || 'smtp.hostinger.com',
-  port: Number(process.env.SMTP_PORT) || 465,
-  secure: true,
-  auth: {
-    user: process.env.SMTP_USER,
-    pass: process.env.SMTP_PASS,
-  },
-});
+const RESEND_API_KEY = process.env.RESEND_API_KEY;
+const NOTIFY_EMAIL = process.env.NOTIFY_EMAIL || 'arpit.tiwari@schoolofdataandai.com';
+const FROM_EMAIL = process.env.FROM_EMAIL || 'notifications@schoolofdataandai.com';
 
-const NOTIFY_EMAIL = process.env.NOTIFY_EMAIL || process.env.SMTP_USER;
-
-// Send notification email (fire-and-forget, never blocks the response)
+// Send notification email via Resend HTTP API (fire-and-forget)
 function sendNotification(data) {
-  if (!process.env.SMTP_USER || !process.env.SMTP_PASS) return;
+  if (!RESEND_API_KEY) return;
 
   const typeLabel = { masterclass: 'Masterclass Registration', enrollment: 'Course Enrollment', enquiry: 'General Enquiry' };
   const subject = `New ${typeLabel[data.type] || 'Submission'} — ${data.name}`;
@@ -36,12 +26,22 @@ function sendNotification(data) {
     <p style="color:#888;font-size:12px;margin-top:20px;">Sent by SDAI Backend</p>
   `;
 
-  transporter.sendMail({
-    from: `"School of Data and AI" <${process.env.SMTP_USER}>`,
-    to: NOTIFY_EMAIL,
-    subject,
-    html,
-  }).catch(err => console.error('Email notification error:', err.message));
+  fetch('https://api.resend.com/emails', {
+    method: 'POST',
+    headers: {
+      'Authorization': 'Bearer ' + RESEND_API_KEY,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      from: 'School of Data and AI <' + FROM_EMAIL + '>',
+      to: [NOTIFY_EMAIL],
+      subject,
+      html,
+    }),
+  })
+    .then(r => r.json())
+    .then(d => { if (d.error) console.error('Resend error:', d.error); })
+    .catch(err => console.error('Email notification error:', err.message));
 }
 
 // POST /api/contact — contact form, masterclass registration, or course enquiry
