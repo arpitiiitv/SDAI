@@ -1,19 +1,30 @@
-const Database = require('better-sqlite3');
+const { Pool } = require('pg');
 const fs = require('fs');
 const path = require('path');
 
-const DB_PATH = process.env.DB_PATH || path.join(__dirname, '..', 'data', 'sdai.db');
-const schemaPath = path.join(__dirname, 'schema.sql');
-
-const dataDir = path.dirname(DB_PATH);
-if (!fs.existsSync(dataDir)) {
-  fs.mkdirSync(dataDir, { recursive: true });
+const DATABASE_URL = process.env.DATABASE_URL;
+if (!DATABASE_URL) {
+  console.error('DATABASE_URL environment variable is required.');
+  process.exit(1);
 }
 
-const db = new Database(DB_PATH);
-db.pragma('journal_mode = WAL');
+const pool = new Pool({
+  connectionString: DATABASE_URL,
+  ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false,
+});
 
-const schema = fs.readFileSync(schemaPath, 'utf8');
-db.exec(schema);
+// Run schema on startup
+async function initDb() {
+  const schemaPath = path.join(__dirname, 'schema.sql');
+  const schema = fs.readFileSync(schemaPath, 'utf8');
+  try {
+    await pool.query(schema);
+    console.log('Database schema initialized.');
+  } catch (err) {
+    console.error('Schema init error:', err.message);
+  }
+}
 
-module.exports = db;
+initDb();
+
+module.exports = pool;

@@ -1,9 +1,9 @@
 const express = require('express');
 const router = express.Router();
-const db = require('../db');
+const pool = require('../db');
 
 // POST /api/contact — contact form, masterclass registration, or course enquiry
-router.post('/', (req, res) => {
+router.post('/', async (req, res) => {
   try {
     const { name, phone, email, message = '', type = 'enquiry', courseTrack = null } = req.body;
 
@@ -14,17 +14,17 @@ router.post('/', (req, res) => {
       });
     }
 
-    const stmt = db.prepare(
+    await pool.query(
       `INSERT INTO submissions (name, phone, email, message, type, course_track)
-       VALUES (?, ?, ?, ?, ?, ?)`
-    );
-    stmt.run(
-      String(name).trim(),
-      String(phone).trim(),
-      String(email).trim(),
-      String(message).trim(),
-      ['enquiry', 'masterclass', 'enrollment'].includes(type) ? type : 'enquiry',
-      courseTrack ? String(courseTrack).trim() : null
+       VALUES ($1, $2, $3, $4, $5, $6)`,
+      [
+        String(name).trim(),
+        String(phone).trim(),
+        String(email).trim(),
+        String(message).trim(),
+        ['enquiry', 'masterclass', 'enrollment'].includes(type) ? type : 'enquiry',
+        courseTrack ? String(courseTrack).trim() : null,
+      ]
     );
 
     res.status(201).json({

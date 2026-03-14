@@ -1,9 +1,9 @@
 const express = require('express');
 const router = express.Router();
-const db = require('../db');
+const pool = require('../db');
 
 // GET /api/verify/:certificateId — verify a certificate by ID
-router.get('/:certificateId', (req, res) => {
+router.get('/:certificateId', async (req, res) => {
   try {
     const certificateId = req.params.certificateId?.trim();
     if (!certificateId) {
@@ -13,21 +13,21 @@ router.get('/:certificateId', (req, res) => {
       });
     }
 
-    const row = db
-      .prepare(
-        `SELECT certificate_id, student_name, course, issued_at
-         FROM certificates
-         WHERE certificate_id = ?`
-      )
-      .get(certificateId);
+    const { rows } = await pool.query(
+      `SELECT certificate_id, student_name, course, issued_at
+       FROM certificates
+       WHERE certificate_id = $1`,
+      [certificateId]
+    );
 
-    if (!row) {
+    if (!rows.length) {
       return res.json({
         valid: false,
         message: 'Certificate not found. Please check the ID and try again.',
       });
     }
 
+    const row = rows[0];
     res.json({
       valid: true,
       certificate: {

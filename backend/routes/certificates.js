@@ -1,9 +1,9 @@
 const express = require('express');
 const router = express.Router();
-const db = require('../db');
+const pool = require('../db');
 
 // POST /api/certificates — add a new certificate (for admin/script use)
-router.post('/', (req, res) => {
+router.post('/', async (req, res) => {
   try {
     const { certificateId, studentName, course, issuedAt } = req.body;
 
@@ -14,15 +14,15 @@ router.post('/', (req, res) => {
       });
     }
 
-    const stmt = db.prepare(
+    await pool.query(
       `INSERT INTO certificates (certificate_id, student_name, course, issued_at)
-       VALUES (?, ?, ?, ?)`
-    );
-    stmt.run(
-      String(certificateId).trim(),
-      String(studentName).trim(),
-      String(course).trim(),
-      issuedAt ? String(issuedAt).trim() : null
+       VALUES ($1, $2, $3, $4)`,
+      [
+        String(certificateId).trim(),
+        String(studentName).trim(),
+        String(course).trim(),
+        issuedAt ? String(issuedAt).trim() : null,
+      ]
     );
 
     res.status(201).json({
@@ -30,7 +30,7 @@ router.post('/', (req, res) => {
       message: 'Certificate added.',
     });
   } catch (err) {
-    if (err.code === 'SQLITE_CONSTRAINT_UNIQUE') {
+    if (err.code === '23505') {
       return res.status(409).json({
         success: false,
         message: 'A certificate with this ID already exists.',

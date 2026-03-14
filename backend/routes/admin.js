@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const db = require('../db');
+const pool = require('../db');
 
 // Auth middleware — checks Bearer token against ADMIN_PASSWORD
 function requireAdmin(req, res, next) {
@@ -18,20 +18,21 @@ function requireAdmin(req, res, next) {
 router.use(requireAdmin);
 
 // GET /api/admin/submissions?type=masterclass|enrollment|enquiry
-router.get('/submissions', (req, res) => {
+router.get('/submissions', async (req, res) => {
   try {
     const { type } = req.query;
-    let rows;
+    let result;
     if (type && ['masterclass', 'enrollment', 'enquiry'].includes(type)) {
-      rows = db.prepare(
-        'SELECT id, name, phone, email, message, type, course_track, created_at FROM submissions WHERE type = ? ORDER BY created_at DESC'
-      ).all(type);
+      result = await pool.query(
+        'SELECT id, name, phone, email, message, type, course_track, created_at FROM submissions WHERE type = $1 ORDER BY created_at DESC',
+        [type]
+      );
     } else {
-      rows = db.prepare(
+      result = await pool.query(
         'SELECT id, name, phone, email, message, type, course_track, created_at FROM submissions ORDER BY created_at DESC'
-      ).all();
+      );
     }
-    res.json({ submissions: rows, count: rows.length });
+    res.json({ submissions: result.rows, count: result.rows.length });
   } catch (err) {
     console.error('Admin submissions error:', err);
     res.status(500).json({ error: 'Failed to fetch submissions.' });
@@ -39,10 +40,10 @@ router.get('/submissions', (req, res) => {
 });
 
 // DELETE /api/admin/submissions/:id
-router.delete('/submissions/:id', (req, res) => {
+router.delete('/submissions/:id', async (req, res) => {
   try {
-    const result = db.prepare('DELETE FROM submissions WHERE id = ?').run(req.params.id);
-    if (result.changes === 0) {
+    const result = await pool.query('DELETE FROM submissions WHERE id = $1', [req.params.id]);
+    if (result.rowCount === 0) {
       return res.status(404).json({ error: 'Submission not found.' });
     }
     res.json({ success: true, message: 'Submission deleted.' });
@@ -53,12 +54,12 @@ router.delete('/submissions/:id', (req, res) => {
 });
 
 // GET /api/admin/certificates
-router.get('/certificates', (req, res) => {
+router.get('/certificates', async (req, res) => {
   try {
-    const rows = db.prepare(
+    const result = await pool.query(
       'SELECT id, certificate_id, student_name, course, issued_at, created_at FROM certificates ORDER BY created_at DESC'
-    ).all();
-    res.json({ certificates: rows, count: rows.length });
+    );
+    res.json({ certificates: result.rows, count: result.rows.length });
   } catch (err) {
     console.error('Admin certificates error:', err);
     res.status(500).json({ error: 'Failed to fetch certificates.' });
@@ -66,10 +67,10 @@ router.get('/certificates', (req, res) => {
 });
 
 // DELETE /api/admin/certificates/:id
-router.delete('/certificates/:id', (req, res) => {
+router.delete('/certificates/:id', async (req, res) => {
   try {
-    const result = db.prepare('DELETE FROM certificates WHERE id = ?').run(req.params.id);
-    if (result.changes === 0) {
+    const result = await pool.query('DELETE FROM certificates WHERE id = $1', [req.params.id]);
+    if (result.rowCount === 0) {
       return res.status(404).json({ error: 'Certificate not found.' });
     }
     res.json({ success: true, message: 'Certificate deleted.' });
@@ -80,14 +81,14 @@ router.delete('/certificates/:id', (req, res) => {
 });
 
 // GET /api/admin/stats — quick summary
-router.get('/stats', (req, res) => {
+router.get('/stats', async (req, res) => {
   try {
-    const totalSubmissions = db.prepare('SELECT COUNT(*) as count FROM submissions').get().count;
-    const masterclass = db.prepare("SELECT COUNT(*) as count FROM submissions WHERE type = 'masterclass'").get().count;
-    const enrollment = db.prepare("SELECT COUNT(*) as count FROM submissions WHERE type = 'enrollment'").get().count;
-    const enquiry = db.prepare("SELECT COUNT(*) as count FROM submissions WHERE type = 'enquiry'").get().count;
-    const totalCertificates = db.prepare('SELECT COUNT(*) as count FROM certificates').get().count;
-    res.json({ totalSubmissions, masterclass, enrollment, enquiry, totalCertificates });
+    const totalSubmissions = (await pool.query('SELECT COUNT(*) as count FROM submissions')).rows[0].count;
+    const masterclass = (await pool.query("SELECT COUNT(*) as count FROM submissions WHERE type = 'masterclass'")).rows[0].count;
+    const enrollment = (await pool.query("SELECT COUNT(*) as count FROM submissions WHERE type = 'enrollment'")).rows[0].count;
+    const enquiry = (await pool.query("SELECT COUNT(*) as count FROM submissions WHERE type = 'enquiry'")).rows[0].count;
+    const totalCertificates = (await pool.query('SELECT COUNT(*) as count FROM certificates')).rows[0].count;
+    res.json({ totalSubmissions: +totalSubmissions, masterclass: +masterclass, enrollment: +enrollment, enquiry: +enquiry, totalCertificates: +totalCertificates });
   } catch (err) {
     console.error('Admin stats error:', err);
     res.status(500).json({ error: 'Failed to fetch stats.' });
